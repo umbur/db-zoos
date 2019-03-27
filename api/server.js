@@ -24,29 +24,40 @@ server.get('/api/zoos', (req, res) => {
   // POST endpoint
   server.post('/api/zoos', (req, res) => {
     const changes = req.body;
-  
-    db.insert(changes)
-    .into('zoos')
-    .then(ids => {
-      res.status(201).json(ids);
-    })
-    .catch(err => {
-      res.status(500).json({ error: "There was an error while saving the zoo to the database." });
-    })
+    if(!req.body.name){
+        res.status(400).json({ error: 'Please make sure you have name property!'})
+    } else {
+        db.insert(changes)
+        .into('zoos')
+        .then(ids => {
+          res.status(201).json(ids);
+        })
+        .catch(err => {
+            res.status(400).json({ error: "Please make sure that the name is not already in use!" });
+          }) 
+          .catch(err => {
+            res.status(500).json({ error: "There was an error while saving the zoo to the database!" });
+          })
+      } 
   })
-  
+
   // GET by id endpoint
   server.get('/api/zoos/:id', (req, res) => {
     db('zoos')
       .where({ id: req.params.id })
       .then(zoo => {
-        if (zoo) {
-          res.status(200).json(zoo);
+          console.log(zoo)
+        if (zoo.length > 0) {
+            res.status(200).json(zoo)
         } else {
-          res.status(404).json({ message: 'zoo not found' });
-        }
-      });
-  });
+            res.status(400).json("error: there is no zoo with such an id")
+          }
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json("error: The zoo doesn't exist, or the request failed.")
+    }) 
+});
   
   // DELETE by id endpoint
   
@@ -140,6 +151,4 @@ server.get('/api/zoos', (req, res) => {
   })
   
   module.exports = server;
-  
-  
   
